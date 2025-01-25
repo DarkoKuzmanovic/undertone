@@ -23,9 +23,49 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
   }, []);
 
-  const addTrack = useCallback((track: Omit<AudioTrack, "id">) => {
-    setTracks((prev) => [...prev, { ...track, id: nanoid() }]);
-  }, []);
+  const addTrack = useCallback(
+    async (track: Omit<AudioTrack, "id">) => {
+      const newTrack = { ...track, id: nanoid() };
+      setTracks((prev) => [...prev, newTrack]);
+
+      // Immediately play the track
+      if (audioContext) {
+        try {
+          const response = await fetch(newTrack.url);
+          const arrayBuffer = await response.arrayBuffer();
+          const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+          const sourceNode = audioContext.createBufferSource();
+          sourceNode.buffer = audioBuffer;
+          sourceNode.loop = true;
+
+          const gainNode = audioContext.createGain();
+          gainNode.gain.value = newTrack.volume * masterVolume;
+
+          sourceNode.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          sourceNode.start();
+
+          // Update the track with the audio nodes and playing state
+          setTracks((prev) =>
+            prev.map((t) =>
+              t.id === newTrack.id
+                ? {
+                    ...t,
+                    isPlaying: true,
+                    audioNode: sourceNode,
+                    gainNode: gainNode,
+                  }
+                : t
+            )
+          );
+        } catch (error) {
+          console.error("Error loading audio:", error);
+        }
+      }
+    },
+    [audioContext, masterVolume]
+  );
 
   const removeTrack = useCallback((id: string) => {
     setTracks((prev) => {

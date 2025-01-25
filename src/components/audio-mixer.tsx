@@ -12,13 +12,7 @@ export function AudioMixer() {
     <div className="space-y-8 p-4">
       <Card className="p-4 flex items-center gap-4 max-w-xs mx-auto">
         <Volume className="h-5 w-5" />
-        <Slider
-          value={[masterVolume]}
-          max={1}
-          step={0.01}
-          onValueChange={(value) => setMasterVolume(value[0])}
-          className="w-32"
-        />
+        <Slider value={[masterVolume]} max={1} step={0.01} onValueChange={(value) => setMasterVolume(value[0])} />
       </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
