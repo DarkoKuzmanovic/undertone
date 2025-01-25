@@ -58,3 +58,17 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
+
+/* Add smooth transitions for theme changes */
+:root {
+  --transition-duration: 200ms;
+}
+
+html {
+  transition: background-color var(--transition-duration) ease;
+}
+
+* {
+  transition: border-color var(--transition-duration) ease, background-color var(--transition-duration) ease,
+    color var(--transition-duration) ease;
+}

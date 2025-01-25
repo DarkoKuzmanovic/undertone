@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { AudioContext, AudioTrack } from '@/lib/audio-context';
-import { nanoid } from 'nanoid';
+import React, { useState, useEffect, useCallback } from "react";
+import { AudioContext, AudioTrack } from "@/lib/audio-context";
+import { nanoid } from "nanoid";
 
 // Add this declaration to handle Safari's WebKit prefix
 declare global {
@@ -9,7 +9,7 @@ declare global {
   }
 }
 
-const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
   const [tracks, setTracks] = useState<AudioTrack[]>([]);
   const [masterVolume, setMasterVolume] = useState(1);
@@ -23,20 +23,24 @@ const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     };
   }, []);
 
-  const addTrack = useCallback((track: Omit<AudioTrack, 'id'>) => {
+  const addTrack = useCallback((track: Omit<AudioTrack, "id">) => {
     setTracks((prev) => [...prev, { ...track, id: nanoid() }]);
   }, []);
 
   const removeTrack = useCallback((id: string) => {
-    setTracks((prev) => prev.filter((track) => track.id !== id));
+    setTracks((prev) => {
+      const track = prev.find((t) => t.id === id);
+      if (track?.isPlaying) {
+        track.audioNode?.stop();
+        track.audioNode?.disconnect();
+        track.gainNode?.disconnect();
+      }
+      return prev.filter((track) => track.id !== id);
+    });
   }, []);
 
   const updateTrack = useCallback((id: string, updates: Partial<AudioTrack>) => {
-    setTracks((prev) =>
-      prev.map((track) =>
-        track.id === id ? { ...track, ...updates } : track
-      )
-    );
+    setTracks((prev) => prev.map((track) => (track.id === id ? { ...track, ...updates } : track)));
   }, []);
 
   const toggleTrack = useCallback(
@@ -73,7 +77,7 @@ const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             gainNode: gainNode,
           });
         } catch (error) {
-          console.error('Error loading audio:', error);
+          console.error("Error loading audio:", error);
         }
       }
     },
@@ -105,5 +109,3 @@ const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     </AudioContext.Provider>
   );
 };
-
-export default AudioProvider;
